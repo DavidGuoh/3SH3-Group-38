@@ -1,4 +1,6 @@
-Assignment Q1 seconds.c (Haoyu Guo) 
+Assignment 1
+
+Q1 seconds.c (Haoyu Guo) 
 
 Opeartion:
 
@@ -18,8 +20,12 @@ Operation:
 
 gcc shell.c -o shell
 
-.\shell 
+./shell 
 
-Q3 q3.c (Julia Lisboa) 
+Q3 - q3.c (Julia Lisboa) 
 
 Operation:
+
+gcc q3.c -o q3 -lpthread -lrt
+
+./q3
