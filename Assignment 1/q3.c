@@ -19,9 +19,9 @@ sem_t chair_update;
 
 int rand_num(){ //random time generator function
     //max is 90 seconds, min is 1 sec of process time waiting
-    int r = rand() % 90000000 ; //max amount of time is 9 seconds
+    int r = rand() % 25000000 ; //max amount of time is 25 seconds
     while (r < 10000000){ // one second minimum (in microsec)
-        r = rand() % 90000000; //regenerate time delay until an appropiate time delay is made
+        r = rand() % 25000000; //regenerate time delay until an appropiate time delay is made
     }
     return r;
 }
@@ -35,7 +35,7 @@ void student_help(){
         printf("Chairs available: %d\n",chairs);
         sem_post(&chair_update); //unlock seat semaphore
         sem_wait(&TA_avail); //wait for avail TA
-        printf("Student[pid= %lu] is in the office.\n",pthread_self());        
+        printf("Student[pid= %lu] is in the office",pthread_self());        
     } else{ //when no waiting chairs are available
         sem_post(&chair_update);
         printf("No chairs avail, student left");
@@ -53,7 +53,7 @@ void TA_help(){
         pthread_mutex_lock(&office); //lock office mutex for when help student
         usleep(rand_num()); //helping a student for a random amount of time
         pthread_mutex_unlock(&office); //unlock office mutex when done helping
-        printf("Student leaving \n");
+        printf("Student leaving");
     }
     pthread_exit(NULL);
 };
