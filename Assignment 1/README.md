@@ -12,7 +12,7 @@ dmesg
 
 cat /proc/seconds (Use Module)
 
-sudo rmmod simple (Remove module) 
+sudo rmmod seconds (Remove module) 
 
 Q2 shell.c (Haoyu Guo) 
 
