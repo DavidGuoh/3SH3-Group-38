@@ -19,9 +19,9 @@ sem_t chair_update;
 
 int rand_num(){ //random time generator function
     //max is 90 seconds, min is 1 sec of process time waiting
-    int r = rand() % 900000000 ; //max amount of time is 9 seconds
+    int r = rand() % 90000000 ; //max amount of time is 9 seconds
     while (r < 10000000){ // one second minimum (in microsec)
-        r = rand() % 900000000; //regenerate time delay until an appropiate time delay is made
+        r = rand() % 90000000; //regenerate time delay until an appropiate time delay is made
     }
     return r;
 }
@@ -35,7 +35,7 @@ void student_help(){
         printf("Chairs available: %d\n",chairs);
         sem_post(&chair_update); //unlock seat semaphore
         sem_wait(&TA_avail); //wait for avail TA
-        printf("Student[pid= %lu] is in the office",pthread_self());        
+        printf("Student[pid= %lu] is in the office.\n",pthread_self());        
     } else{ //when no waiting chairs are available
         sem_post(&chair_update);
         printf("No chairs avail, student left");
@@ -53,7 +53,7 @@ void TA_help(){
         pthread_mutex_lock(&office); //lock office mutex for when help student
         usleep(rand_num()); //helping a student for a random amount of time
         pthread_mutex_unlock(&office); //unlock office mutex when done helping
-        printf("Student leaving");
+        printf("Student leaving \n");
     }
     pthread_exit(NULL);
 };
@@ -85,16 +85,17 @@ int main() {
     temp = pthread_create(&TA, NULL, (void *)TA_help, NULL);  
 	
     if (temp)
-        printf("Could not make thread."); 
+        printf("Failed to create thread."); 
     
     /* Create customer_maker thread */
     temp = pthread_create(&student, NULL, (void *)spawn_student, NULL);  
 	
     if (temp)
-        printf("Could not make thread."); 
+        printf("Failed to create thread."); 
      
     /* Waiting for threads*/
     pthread_join(TA, NULL);
     pthread_join(student, NULL);
         	
 };
+
