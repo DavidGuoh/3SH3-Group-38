@@ -6,7 +6,7 @@
 #include <linux/jiffies.h>
 
 #define BUFFER_SIZE 128
-#define PROC_NAME "seconds"
+#define PROC_NAME "seconds" //state the name of proc
 
 unsigned long start_seconds;
 
@@ -19,16 +19,16 @@ static struct file_operations proc_ops = {
 
 int proc_init(void)
 {
-    proc_create(PROC_NAME, 0, NULL, &proc_ops);
+    proc_create(PROC_NAME, 0, NULL, &proc_ops); //create proc
     printk(KERN_INFO "/proc/%s created\n", PROC_NAME);
 
-	start_seconds = jiffies/HZ;
+	start_seconds = jiffies/HZ; 
     return 0;
 }
 /* This function is called when the module is removed. */
 void proc_exit(void) 
 {
-    remove_proc_entry(PROC_NAME, NULL);
+    remove_proc_entry(PROC_NAME, NULL); //Remove proc
 	printk(KERN_INFO "Removing Module\n");
 }
 
@@ -39,7 +39,7 @@ ssize_t proc_read(struct file *file, char __user *usr_buf, size_t count, loff_t 
         unsigned long current_seconds;
         static int completed = 0;
 
-        current_seconds = jiffies/HZ - start_seconds;
+        current_seconds = jiffies/HZ - start_seconds; //calculate the current time using jiffies and HZ now and start_seconds recorded
 
         if (completed) {
                 completed = 0;
@@ -48,7 +48,7 @@ ssize_t proc_read(struct file *file, char __user *usr_buf, size_t count, loff_t 
 
         completed = 1;
 
-        rv = sprintf(buffer, "Elapsed Time: %lu S\n",current_seconds);
+        rv = sprintf(buffer, "Elapsed Time: %lu S\n",current_seconds); //Print the seconds to prompt
 
         // copies the contents of buffer to userspace usr_buf
         copy_to_user(usr_buf, buffer, rv);
@@ -59,3 +59,4 @@ ssize_t proc_read(struct file *file, char __user *usr_buf, size_t count, loff_t 
 /* Macros for registering module entry and exit points. */
 module_init( proc_init );
 module_exit( proc_exit );
+// Reference: Hello.c Proc.c
