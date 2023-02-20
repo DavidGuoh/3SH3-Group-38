@@ -1,3 +1,4 @@
+//Haoyu Guo 2023/02/16
 #include <sys/wait.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,7 +8,7 @@
 #include <assert.h>
 
 #define MAX_LINE 80 //define the max length of input command
-void print_history(char history[][MAX_LINE/2+1],int history_count){
+void print_history(char history[][MAX_LINE/2+1],int history_count){ //print the history
     for(int j =0;j<history_count;j++){
         printf("%d %s\n",j+1,history[j]);
     }
@@ -119,3 +120,7 @@ int main(){
     }
     return 0;
 }
+
+//Reference: practice lab 2,3, usage of execvp: https://blog.csdn.net/cunchi4221/article/details/107470898
+//usage of strtok https://www.qycn.com/xzx/article/17607.html
+//How to use fgets http://c.biancheng.net/view/235.html
