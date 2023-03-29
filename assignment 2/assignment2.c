@@ -100,10 +100,11 @@ void TLB_Add(TLBentry *TLBt,int *pno,int *fno){
 	return;
 }
 
-void TLB_Update(TLBentry *TLBt,int *pno,int *newpage){
+void TLB_Update(TLBentry *TLBt,int *pno,int *newpage,int *newframe){
     for (int i = 0; i < 10; i++) {
 		if(TLBt[i].PageNum ==pno){
 			TLBt[i].PageNum = newpage;
+			TLBt[i].FrameNum = newframe;
 		}
 	}
 }
