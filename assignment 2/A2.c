@@ -6,117 +6,132 @@
 #include <stdlib.h> /*For file descriptors*/
 
 #define BUFFER_SIZE 10
+typedef struct TLBentry
+{
+	int PageNum;
+	int FrameNum;
+	/* data */
+}TLBentry;
+
+int search_TLB(TLBentry *TLBt,int pno);
+void TLB_Add(TLBentry *TLBt,int pno,int fno);
+void TLB_Update(TLBentry *TLBt,int pno,int newpage,int newframe);
+
+int t = 0;
 
 //Define the needed macros
 #define OFFSET_MASK 255
-#define PAGES 2^8
+#define PAGES 256
 #define OFFSET_BITS 8
-#define PAGE_SIZE 2^8
+#define PAGE_SIZE 256
+#define FRAME_SIZE 256
+#define FRAME_COUNT 128
+//#define INT_SIZE 4 // Size of integer in bytes
+//#define INT_COUNT 16384
+//#define MEMORY_SIZE INT_COUNT * INT_SIZE
+#define MEMORY_SIZE 65536
+#define PHYSICAL_SIZE 32768
 
-#define INT_SIZE 4 // Size of integer in bytes
-#define INT_COUNT 16384
-#define MEMORY_SIZE INT_COUNT * INT_SIZE
-int intArray[MEMORY_SIZE]; 
+char intArray[PHYSICAL_SIZE]; 
 signed char *mmapfptr;
-
-//defining TLBentry struct
-typedef struct 
-{
-    int pg_num;
-    int frame_num;
-} TLBentry;
-
-
-int main(int argc, char *argv[]) {
-
-	//int page_table[PAGES] = {6,4,3,7,0,1,2,5};
+int flag = 0;
+int TLB_flag = 0;
+int mem_flag = 0;
+int page_fault = 0;
+int numhit = 0;
+int value = 0;
+int total_address = 0;
+int main(void) {
+	int page_table[PAGES];
+	for (int i =0;i<PAGES-1;i++){
+		page_table[i] = -1;
+	}
+	int mmapfile_fd = open("BACKING_STORE.bin", O_RDONLY);    
+    mmapfptr = mmap(0, MEMORY_SIZE, PROT_READ, MAP_PRIVATE, mmapfile_fd, 0);
 	FILE *fptr = fopen("addresses.txt", "r");
-	unsigned int vaddr, pno,page_offset;//, phyAddr, framenumber
+	TLBentry TLBt[16];
+	unsigned int vaddr, pno,page_offset,framenumber,phyAddr; 
 	char buff[BUFFER_SIZE];
-	//Read from labaddr.txt till you read end of file.
 	while(fgets(buff, BUFFER_SIZE, fptr) != NULL){
 		vaddr = atoi(buff);
+		
 		pno = vaddr >> OFFSET_BITS;
-		//framenumber = page_table[pno];
 		page_offset = vaddr & OFFSET_MASK;
-		//phyAddr = (framenumber<<OFFSET_BITS)|page_offset;
-		printf("%d, %d, %d\n",vaddr,pno,page_offset);//,phyAddr);
-	}
-	fclose(fptr);
+        flag = 0;
+		//,phyAddr);
+		framenumber = search_TLB(TLBt,pno);
+		if (flag == 1){
+			phyAddr = (framenumber<<OFFSET_BITS)|page_offset;
+			value = intArray[phyAddr];
+            numhit++;
+        }
+		else{
+			if (page_table[pno]==-1){
+				//Page_Fault and read from Backing_Store.bin
+                page_fault++;
+                framenumber = mem_flag;
+                memcpy(intArray+(framenumber*FRAME_SIZE), mmapfptr + (pno*PAGE_SIZE), FRAME_SIZE);
+                mem_flag = (mem_flag+1)%FRAME_COUNT;
+                page_table[pno]=framenumber;
+				if (search_TLB(TLBt,pno)!=-1){
+					TLB_Update(TLBt,pno,pno,framenumber);
+				}
+			}
+			else{
+                if (frame_number >= PHYSICAL_SIZE){
+                    for (i=0; i < (sizeof(page_table)/sizeof(int));i++){
+                        if (page_table[pno] > 128){
+                            //SWAP PAGE
+                            framenumber = page_table[pno];
+                            page_table[pno]=-1;
+                            break;
+                        }
+                    }
+                }
+                framenumber = page_table[pno];
+                TLB_Add(TLBt,pno,framenumber);
+			}
+		}
+		phyAddr = (framenumber<<OFFSET_BITS)|page_offset;
+		value = intArray[phyAddr];
 
-    int mmapfile_fd = open("BACKING_STORE.bin", O_RDONLY);    
-    //Use the mmap() system call to memory map numbers.bin file
-    mmapfptr = mmap(0, MEMORY_SIZE, PROT_READ, MAP_PRIVATE, mmapfile_fd, 0);
-    
-    //Use a for loop to retrieve the contents of the memory mapped file and store it in the integer array using memcpy() function.
-    for(int i = 0; i < INT_COUNT; i ++){
-        memcpy(intArray + i, mmapfptr + 4*i, INT_SIZE);
+        printf("Virtual Address: %d Physical Address = %d Value=%d\n",vaddr,phyAddr,value);
+		total_address++;
     }
-    munmap(mmapfptr, MEMORY_SIZE);
-
-    //CALLING SEARCH_TLB FUNCTION
-    TLBentry tlb[MEMORY_SIZE]; //INITIALIZE TLB variable
-    int TLB_first = 0; //required to count for FIFO policy, keeps track for adding
-
-    // calling functions
-    int frame = search_TLB(tlb,page);
-    //error checking if frame is less than 1
-    if (frame < 0 ){
-        printf("ERROR FRAME NUMBER DOES NOT EXIST");
-    }
-
+	printf("Total Address: %d\n",total_address);
+	printf("Page Fault %d\n",page_fault);
+	printf("TLB HIT: %d\n",numhit);
+    fclose(fptr);
+    munmap(mmapfptr, PHYSICAL_SIZE);
     return 0;
 }
-
-int search_TLB(struct TLBentry tlb, int page){ //page is number that you're checking for
-    int frame = -1 ; //initially set frame num to -1 to return in case no value is found
-    
-    for (int i=0; i<MEMORY_SIZE; i++){ //iterate through to find corresponding pg num
-        if (tlb[i].pg_num == page){
-            frame_error = tlb[i].frame_num;
-            break; // if the number is found, exit the loop and return the found frame
-        }
-    }
-
-    return frame;
+	
+int search_TLB(TLBentry *TLBt,int pno){
+	int framenumber;
+    for (int i = 0; i < 10; i++) {
+		if(TLBt[i].PageNum ==pno){
+			framenumber = TLBt[i].FrameNum;
+			flag = 1;
+			return framenumber;
+		}
+	}
+	return -1;
 }
 
-void TLB_Add(struct TLBentry tlb, int index, int page, int frame){
-    //reassigning
-    tlb[index].frame_num = frame;
-    tlb[index].pg_num = page;
-    index = (index+1) % MEMORY_SIZE; //Shifts the index to account for first in first out
+void TLB_Add(TLBentry *TLBt,int pno,int fno){
+    TLBt[TLB_flag].PageNum = pno;
+ 	TLBt[TLB_flag].FrameNum = fno;
+	TLB_flag++;
+	TLB_flag%=10;
+	return;
 }
 
-void TLB_Update(struct TLBentry tlb, int size, int page, int frame){
-    //search for if the page number is found, then update frame num
-    bool found = false; //variable to 
-
-    for (int i = 0; i<MEMORY_SIZE;i++){
-        if(tlb[i].pg_num == page ){
-            tlb[i].frame_num=frame;
-            found = true;
-        }
-    }
-
-    if(!found){
-        //keeping track of s
-        if (size==MEMORY_SIZE){
-            // replace if the table is full
-            for(int i = 0; i<MEMORY_SIZE-1;i++){
-                tlb[i] = tlb[i+1];
-            } //FIFO take the first in and swap
-            tlb[MEMORY_SIZE - 1].pg_num = page;
-            tlb[MEMORY_SIZE - 1].frame_num = frame;
-        } else{ //keeping 
-            tlb[size].pg_num = page;
-            tlb[size].frame_num = frame;
-            size = size + 1;
-        }
-    } 
+void TLB_Update(TLBentry *TLBt,int pno,int newpage,int newframe){
+    for (int i = 0; i < 10; i++) {
+		if(TLBt[i].PageNum ==pno){
+			TLBt[i].PageNum = newpage;
+			TLBt[i].FrameNum = newframe;
+		}
+	}
+	return;
 }
-
-void PAGE_FAULT(void){
-    return;
-}
-
