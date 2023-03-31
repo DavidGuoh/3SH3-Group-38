@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include <stdio.h>
 #include <sys/mman.h> /*For mmap() function*/
 #include <string.h> /*For memcpy function*/
@@ -15,23 +14,18 @@ typedef struct TLBentry
 
 int search_TLB(TLBentry *TLBt,int pno);
 void TLB_Add(TLBentry *TLBt,int pno,int fno);
-void TLB_Update(TLBentry *TLBt,int pno,int newpage,int newframe);
-
-int t = 0;
+int TLB_Update(TLBentry *TLBt,int pno,int newpage,int newframe);
+int replace_Pagetable(int *page_table,int framenumber);
 
 //Define the needed macros
 #define OFFSET_MASK 255
-#define PAGES 256
 #define OFFSET_BITS 8
+#define PAGES 256
 #define PAGE_SIZE 256
 #define FRAME_SIZE 256
 #define FRAME_COUNT 128
-//#define INT_SIZE 4 // Size of integer in bytes
-//#define INT_COUNT 16384
-//#define MEMORY_SIZE INT_COUNT * INT_SIZE
 #define MEMORY_SIZE 65536
 #define PHYSICAL_SIZE 32768
-
 char intArray[PHYSICAL_SIZE]; 
 signed char *mmapfptr;
 int flag = 0;
@@ -57,8 +51,6 @@ int main(void) {
 		
 		pno = vaddr >> OFFSET_BITS;
 		page_offset = vaddr & OFFSET_MASK;
-        flag = 0;
-		//,phyAddr);
 		framenumber = search_TLB(TLBt,pno);
 		if (flag == 1){
 			phyAddr = (framenumber<<OFFSET_BITS)|page_offset;
@@ -67,30 +59,39 @@ int main(void) {
         }
 		else{
 			if (page_table[pno]==-1){
-				//Page_Fault and read from Backing_Store.bin
-                page_fault++;
-                framenumber = mem_flag;
-                memcpy(intArray+(framenumber*FRAME_SIZE), mmapfptr + (pno*PAGE_SIZE), FRAME_SIZE);
-                mem_flag = (mem_flag+1)%FRAME_COUNT;
-                page_table[pno]=framenumber;
-				if (search_TLB(TLBt,pno)!=-1){
-					TLB_Update(TLBt,pno,pno,framenumber);
+				if(page_fault>127){
+					page_fault++;
+                	framenumber = mem_flag;
+                	memcpy(intArray+(framenumber*FRAME_SIZE), mmapfptr + (pno*PAGE_SIZE), FRAME_SIZE);
+                	mem_flag = (mem_flag+1)%FRAME_COUNT;
+					int oldpage = replace_Pagetable(page_table,framenumber);
+                	page_table[pno]=framenumber;
+					int isin = TLB_Update(TLBt,oldpage,pno,framenumber);
+					if (isin==-1){
+						TLB_Add(TLBt,pno,framenumber);
+					}
+				}
+				else{
+					page_fault++;
+                	framenumber = mem_flag;
+                	memcpy(intArray+(framenumber*FRAME_SIZE), mmapfptr + (pno*PAGE_SIZE), FRAME_SIZE);
+                	mem_flag = (mem_flag+1)%FRAME_COUNT;
+                	page_table[pno]=framenumber;
+					TLB_Add(TLBt,pno,framenumber);
 				}
 			}
 			else{
 				framenumber = page_table[pno];
 				TLB_Add(TLBt,pno,framenumber);
+				//TLB_Update(TLBt,pno,pno,framenumber);
 			}
 		}
 		phyAddr = (framenumber<<OFFSET_BITS)|page_offset;
 		value = intArray[phyAddr];
-		
-		/*if (t >= 30){
+        printf("%d, %d, %d\n",vaddr,phyAddr,value);
+		if (vaddr == 28210){
 			break;
 		}
-		t++;
-		*/
-        printf("%d, %d, %d\n",vaddr,phyAddr,value);
 		total_address++;
     }
 	printf("Total Address: %d\n",total_address);
@@ -102,8 +103,9 @@ int main(void) {
 }
 	
 int search_TLB(TLBentry *TLBt,int pno){
-	int framenumber;
-    for (int i = 0; i < 10; i++) {
+	int framenumber = 0;
+	flag = 0;
+    for (int i = 0; i < 16; i++) {
 		if(TLBt[i].PageNum ==pno){
 			framenumber = TLBt[i].FrameNum;
 			flag = 1;
@@ -117,16 +119,26 @@ void TLB_Add(TLBentry *TLBt,int pno,int fno){
     TLBt[TLB_flag].PageNum = pno;
  	TLBt[TLB_flag].FrameNum = fno;
 	TLB_flag++;
-	TLB_flag%=10;
+	TLB_flag%=16;
 	return;
 }
 
-void TLB_Update(TLBentry *TLBt,int pno,int newpage,int newframe){
-    for (int i = 0; i < 10; i++) {
-		if(TLBt[i].PageNum ==pno){
-			TLBt[i].PageNum = newpage;
+int TLB_Update(TLBentry *TLBt,int oldpno,int newpno,int newframe){
+    for (int i = 0; i < 16; i++) {
+		if(TLBt[i].PageNum ==oldpno){
+			TLBt[i].PageNum = newpno;
 			TLBt[i].FrameNum = newframe;
+			return 1;
 		}
 	}
-	return;
+	return -1;
+}
+int replace_Pagetable(int *page_table,int framenumber){
+	for (int i=0;i<PAGES;i++){
+		if (page_table[i]==framenumber){
+			page_table[i] = -1;
+			return i;
+		}
+	}
+	return -1;
 }
