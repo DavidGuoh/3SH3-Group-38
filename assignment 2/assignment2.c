@@ -14,7 +14,7 @@ typedef struct TLBentry
 
 int search_TLB(TLBentry *TLBt,int pno);
 void TLB_Add(TLBentry *TLBt,int pno,int fno);
-int TLB_Update(TLBentry *TLBt,int pno,int newpage,int newframe);
+int TLB_Update(TLBentry *TLBt,int oldframe,int newpno);
 int replace_Pagetable(int *page_table,int framenumber);
 
 //Define the needed macros
@@ -26,7 +26,7 @@ int replace_Pagetable(int *page_table,int framenumber);
 #define FRAME_COUNT 128
 #define MEMORY_SIZE 65536
 #define PHYSICAL_SIZE 32768
-char intArray[PHYSICAL_SIZE]; 
+char intArray[PHYSICAL_SIZE] = {-1}; 
 signed char *mmapfptr;
 int flag = 0;
 int TLB_flag = 0;
@@ -37,7 +37,7 @@ int value = 0;
 int total_address = 0;
 int main(void) {
 	int page_table[PAGES];
-	for (int i =0;i<PAGES-1;i++){
+	for (int i =0;i<PAGES;i++){
 		page_table[i] = -1;
 	}
 	int mmapfile_fd = open("BACKING_STORE.bin", O_RDONLY);    
@@ -53,20 +53,19 @@ int main(void) {
 		page_offset = vaddr & OFFSET_MASK;
 		framenumber = search_TLB(TLBt,pno);
 		if (flag == 1){
-			phyAddr = (framenumber<<OFFSET_BITS)|page_offset;
-			value = intArray[phyAddr];
             numhit++;
         }
 		else{
 			if (page_table[pno]==-1){
 				if(page_fault>127){
+					printf("%d\n",1);
 					page_fault++;
                 	framenumber = mem_flag;
                 	memcpy(intArray+(framenumber*FRAME_SIZE), mmapfptr + (pno*PAGE_SIZE), FRAME_SIZE);
                 	mem_flag = (mem_flag+1)%FRAME_COUNT;
 					int oldpage = replace_Pagetable(page_table,framenumber);
                 	page_table[pno]=framenumber;
-					int isin = TLB_Update(TLBt,oldpage,pno,framenumber);
+					int isin = TLB_Update(TLBt,framenumber,pno);
 					if (isin==-1){
 						TLB_Add(TLBt,pno,framenumber);
 					}
@@ -85,13 +84,12 @@ int main(void) {
 				TLB_Add(TLBt,pno,framenumber);
 				//TLB_Update(TLBt,pno,pno,framenumber);
 			}
-		}
+		}		
+		//printf("%d\n",framenumber);
 		phyAddr = (framenumber<<OFFSET_BITS)|page_offset;
 		value = intArray[phyAddr];
-        printf("%d, %d, %d\n",vaddr,phyAddr,value);
-		if (vaddr == 28210){
-			break;
-		}
+        
+		printf("%d, %d, %d\n",vaddr,phyAddr,value);
 		total_address++;
     }
 	printf("Total Address: %d\n",total_address);
@@ -123,11 +121,10 @@ void TLB_Add(TLBentry *TLBt,int pno,int fno){
 	return;
 }
 
-int TLB_Update(TLBentry *TLBt,int oldpno,int newpno,int newframe){
+int TLB_Update(TLBentry *TLBt,int oldframe,int newpno){
     for (int i = 0; i < 16; i++) {
-		if(TLBt[i].PageNum ==oldpno){
+		if(TLBt[i].FrameNum ==oldframe){
 			TLBt[i].PageNum = newpno;
-			TLBt[i].FrameNum = newframe;
 			return 1;
 		}
 	}
