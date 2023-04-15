@@ -1,1 +1,5 @@
-1
+DISK SEARCHING ALGORITHM
+gcc assignment3.c -o a3
+./a3 NUM DIR
+NUM = 0-299
+DIR = LEFT or RIGHT
