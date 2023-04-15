@@ -1,6 +1,6 @@
 Assignment 1
 
-Q1 seconds.c (Haoyu Guo) 
+Q1
 
 Opeartion:
 
@@ -14,7 +14,7 @@ cat /proc/seconds (Use Module)
 
 sudo rmmod seconds (Remove module) 
 
-Q2 shell.c (Haoyu Guo) 
+Q2 shell.c
 
 Operation:
 
@@ -22,7 +22,7 @@ gcc shell.c -o shell
 
 ./shell 
 
-Q3 - q3.c (Julia Lisboa) 
+Q3 - q3.c
 
 Operation:
 
