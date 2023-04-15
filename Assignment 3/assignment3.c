@@ -15,7 +15,7 @@ int stringsearch(int arr[], int len,int value);
 int repeat = 0;
 int main(int argc, char *argv[])
 {   
-    int sum = 0;
+int sum = 0;
     int result[MEMORY_SIZE+1] ={0};
     int mmapfile_fd = open("request.bin", O_RDONLY); 
     mmapfptr = mmap(0, MEMORY_SIZE, PROT_READ, MAP_PRIVATE, mmapfile_fd, 0);
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
         array1[i+1] = intArray[i];
     }    
     bubble_sort(array1,INT_COUNT+1);
-    int index = stringsearch(array1, INT_COUNT+1,100);
+    int index = stringsearch(array1, INT_COUNT+1,atoi(argv[1]));
     int a = index-1;
     int b = index+1;
     int count = 0;
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 
 
     printf("SCAN DISK SCHEDULING ALGORITHM\n");
-    sum = 0;
+    sum = 0; 
     int array2[INT_COUNT+1] ={0};
     int res2[INT_COUNT+1] ={0};
     array2[0] = atoi(argv[1]);
@@ -122,8 +122,8 @@ int main(int argc, char *argv[])
         array2[i+1] = intArray[i];
     }    
     bubble_sort(array2,INT_COUNT+1);
-    repeat=0;
-    index = stringsearch(array2, INT_COUNT+1,100);
+    repeat=0; //if there is a head, changes to one
+    index = stringsearch(array2, INT_COUNT+1,atoi(argv[1])); //checks for index of head
     if (strcmp(argv[2],"LEFT")==0){
         if (repeat==1){
             for (int i =index;i>=0;i--){
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
                 printf("%d, ",res2[i]);
             }
             printf("\n");
-            printf("SCAN DISK - Total head movements = %d\n",abs(100-0)+abs(0-res2[INT_COUNT]));
+            printf("SCAN DISK - Total head movements = %d\n",abs(atoi(argv[1])-0)+abs(0-res2[INT_COUNT]));
         }
         else{
             for (int i =index-1;i>=0;i--){
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
                 printf("%d, ",res2[i]);
             }
             printf("\n");
-            printf("SCAN DISK - Total head movements = %d\n",abs(100-0)+abs(0-res2[INT_COUNT]));
+            printf("SCAN DISK - Total head movements = %d\n",abs(atoi(argv[1])-0)+abs(0-res2[INT_COUNT]));
         }
         
     }
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
                 printf("%d, ",res2[i]);
             }
             printf("\n");
-            printf("SCAN DISK - Total head movements = %d\n",abs(299-res2[0])+abs(299-100));
+            printf("SCAN DISK - Total head movements = %d\n",abs(299-res2[0])+abs(299-atoi(argv[1])));
         }
         else{
             for (int i =index+1;i<INT_COUNT+1;i++){
@@ -174,7 +174,146 @@ int main(int argc, char *argv[])
                 printf("%d, ",res2[i]);
             }
             printf("\n");
-            printf("SCAN DISK - Total head movements = %d\n",abs(299-res2[0])+abs(299-100));
+            printf("SCAN DISK - Total head movements = %d\n",abs(299-res2[0])+abs(299-atoi(argv[1])));
+        }
+        
+    }
+    else{
+        printf("Error, Direction should be LEFT or RIGHT");
+    }
+
+
+    printf("C-SCAN DISK SCHEDULING ALGORITHM\n");
+    sum = 0;
+    int array4[INT_COUNT+1] ={0};
+    int res4[INT_COUNT+1] ={0};
+    array4[0] = atoi(argv[1]);
+    for(int i = 0; i < INT_COUNT; i ++){
+        array4[i+1] = intArray[i];
+    }    
+    bubble_sort(array4,INT_COUNT+1); //sort items in bin in order
+    repeat=0;
+    index = stringsearch(array4, INT_COUNT+1,atoi(argv[1]));
+    if (strcmp(argv[2],"LEFT")==0){ //left scanning
+        if (repeat==1){
+            for (int i =index;i>=0;i--){ //start at initial head position and decrement until zero
+                res4[i] = array4[i];
+                printf("%d, ",res4[i]);
+            }
+            for (int i =INT_COUNT;i>index+1;i--){ //since wraps around, go to max and decrement until one above initial
+                res4[i] = array4[i];
+                printf("%d, ",res4[i]);
+            }
+            printf("\n");
+            printf("C-SCAN DISK - Total head movements = %d\n",abs(atoi(argv[1])-299)+abs(0-array4[index+1]));
+        }
+        
+    }
+    else if (strcmp(argv[2],"RIGHT")==0){ //right scanning
+        if (repeat==1){
+            for (int i =index+1;i<INT_COUNT+1;i++){ // start at initial head position and increment until max
+                res4[i] = array4[i];
+                printf("%d, ",res4[i]);
+            }
+            for (int i = 0;i<index;i++){ //wrap around to zero and increment to meet in middle
+                res4[i] = array4[i];
+                printf("%d, ",res4[i]);
+            }
+            printf("\n");
+            printf("C-SCAN DISK - Total head movements = %d\n",abs(atoi(argv[1])-299)+abs(0-res4[0]));
+        }
+        
+    }
+    else{
+        printf("Error, Direction should be LEFT or RIGHT");
+    }
+
+    printf("LOOK DISK SCHEDULING ALGORITHM\n");
+    sum = 0;
+    int array3[INT_COUNT+1] ={0};
+    int res3[INT_COUNT+1] ={0};
+    array3[0] = atoi(argv[1]);
+    for(int i = 0; i < INT_COUNT; i ++){
+        array3[i+1] = intArray[i];
+    }    
+    bubble_sort(array3,INT_COUNT+1);
+    repeat=0;
+    index = stringsearch(array3, INT_COUNT+1,atoi(argv[1]));
+    if (strcmp(argv[2],"LEFT")==0){ //left scanning
+        if (repeat==1){
+            for (int i =index;i>=0;i--){ //start at initial head position and decrement to 0
+                res3[i] = array3[i];
+                printf("%d, ",res3[i]);
+            }
+            int end1 = res3[0];
+            for (int i =index+2;i<INT_COUNT+1;i++){ //go back to initial and increment to end
+                res3[i] = array3[i];
+                printf("%d, ",res3[i]);
+            }
+            printf("\n");
+            printf("LOOK DISK - Total head movements = %d\n",abs(atoi(argv[1])-end1)+abs(res3[0]-res3[INT_COUNT-1]));
+        }
+        
+    }
+    else if (strcmp(argv[2],"RIGHT")==0){ //right scanning
+        if (repeat==1){
+            for (int i =index+1;i<INT_COUNT+1;i++){ //start at initial position and increment to end
+                res3[i] = array3[i];
+                printf("%d, ",res3[i]);
+            }
+            for (int i =index -1;i>=0;i--){ //go back to initial and decrement to zero
+                res3[i] = array3[i];
+                printf("%d, ",res3[i]);
+            }
+            printf("\n");
+            printf("LOOK DISK - Total head movements = %d\n",abs(atoi(argv[1])-299)+abs(atoi(argv[1])-0));
+        }
+        
+    }
+    else{
+        printf("Error, Direction should be LEFT or RIGHT");
+    }
+    
+    printf("C-LOOK DISK SCHEDULING ALGORITHM\n");
+    sum = 0;
+    int array5[INT_COUNT+1] ={0};
+    int res5[INT_COUNT+1] ={0};
+    array5[0] = atoi(argv[1]);
+    for(int i = 0; i < INT_COUNT; i ++){
+        array5[i+1] = intArray[i];
+    }    
+    bubble_sort(array5,INT_COUNT+1); //sort items in bin in order
+    repeat=0;
+    index = stringsearch(array5, INT_COUNT+1,atoi(argv[1]));
+    if (strcmp(argv[2],"LEFT")==0){ //left scanning
+        if (repeat==1){
+            for (int i =index;i>=0;i--){ //start at initial head position and decrement until zero
+                res5[i] = array5[i];
+                printf("%d, ",res5[i]);
+            }
+            for (int i =INT_COUNT;i>index+1;i--){ //since wraps around, go to max and decrement until one above initial
+                res5[i] = array5[i];
+                printf("%d, ",res5[i]);
+            }
+            printf("\n");
+            printf("C-LOOK DISK - Total head movements = %d\n",abs(atoi(argv[1])-299)+abs(0-array5[index+1]));
+        }
+        
+    }
+    else if (strcmp(argv[2],"RIGHT")==0){ //right scanning
+        if (repeat==1){
+            for (int i =index+1;i<INT_COUNT+1;i++){ // start at initial head position and increment until max
+                res5[i] = array5[i];
+                printf("%d, ",res5[i]);
+            }
+            int end1 = res5[INT_COUNT];
+            for (int i = 0;i<index;i++){ //wrap around to zero and increment to meet in middle
+                res5[i] = array5[i];
+                printf("%d, ",res5[i]);
+            }
+            int end2 = res5[index-1];
+            printf("\n");
+            printf("C-LOOK DISK - Total head movements = %d\n",abs(atoi(argv[1])-end1)+abs(end1-299)+ abs(0-res5[0])+abs(res5[0]-end2));
         }
         
     }
@@ -198,7 +337,7 @@ void bubble_sort(int arr[], int len) {
                 }
         }
 }
-
+//SEARCHING FOR HEAD VALUES
 int stringsearch(int arr[], int len,int value){
     int find = 0;
     for (int i = 0; i < len - 1; i++){
