@@ -15,10 +15,25 @@ int stringsearch(int arr[], int len,int value);
 int repeat = 0;
 int main(int argc, char *argv[])
 {   
-int sum = 0;
+    int sum = 0;
     int result[MEMORY_SIZE+1] ={0};
     int mmapfile_fd = open("request.bin", O_RDONLY); 
     mmapfptr = mmap(0, MEMORY_SIZE, PROT_READ, MAP_PRIVATE, mmapfile_fd, 0);
+    printf("Total requests = 20\n");
+    if(atoi(argv[1])>0 && atoi(argv[1])<=299 || strcmp(argv[1],"0")==0){
+        printf("Initial Head Position: %d\n",atoi(argv[1]));
+    }
+    else{
+        printf("INPUT ERROR\n");
+        return -1;
+    }
+    if(strcmp(argv[2],"RIGHT")==0 || strcmp(argv[2],"LEFT")==0){
+        printf("Direction of Head: %s\n",argv[2]); 
+    }
+    else{
+        printf("INPUT ERROR\n");
+        return -1;
+    }
     result[0] = atoi(argv[1]);
     for(int i = 0; i < INT_COUNT; i ++){
         memcpy(intArray + i, mmapfptr + 4*i, INT_SIZE);
@@ -28,7 +43,7 @@ int sum = 0;
         result[i+1] = intArray[i];
         printf("%d, ",result[i+1]);
     }
-    printf("%d\n",result[INT_COUNT]);
+    printf("\n");
     for(int i = 0; i < INT_COUNT; i ++){
         sum = sum + abs(result[i]-result[i+1]);
     }
@@ -49,8 +64,20 @@ int sum = 0;
     }    
     bubble_sort(array1,INT_COUNT+1);
     int index = stringsearch(array1, INT_COUNT+1,atoi(argv[1]));
-    int a = index-1;
-    int b = index+1;
+    int a,b;
+    if(atoi(argv[1]) == array1[0]){
+        a = 0;
+    }
+    else{
+        a = index-1;
+    }
+    if(atoi(argv[1]) == array1[INT_COUNT]){
+        b = INT_COUNT;
+    }
+    else{
+        b = index+1;
+    }
+    
     int count = 0;
     while(a!=0 || b!=INT_COUNT){
         if (a==0){
@@ -114,7 +141,7 @@ int sum = 0;
 
 
     printf("SCAN DISK SCHEDULING ALGORITHM\n");
-    sum = 0; 
+    sum = 0;
     int array2[INT_COUNT+1] ={0};
     int res2[INT_COUNT+1] ={0};
     array2[0] = atoi(argv[1]);
@@ -122,8 +149,8 @@ int sum = 0;
         array2[i+1] = intArray[i];
     }    
     bubble_sort(array2,INT_COUNT+1);
-    repeat=0; //if there is a head, changes to one
-    index = stringsearch(array2, INT_COUNT+1,atoi(argv[1])); //checks for index of head
+    repeat=0;
+    index = stringsearch(array2, INT_COUNT+1,atoi(argv[1]));
     if (strcmp(argv[2],"LEFT")==0){
         if (repeat==1){
             for (int i =index;i>=0;i--){
